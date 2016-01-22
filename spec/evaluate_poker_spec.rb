@@ -36,19 +36,28 @@ end
 
 describe EvaluatePoker do
 
+  describe '#evaluate' do
+    it 'should return an accurate score for any hand' do
+      expect( EvaluatePoker.evaluate(init_from_values([1, 10, 11, 12, 13].shuffle, random_color), [])).to eq(129)
+      expect( EvaluatePoker.evaluate(init_from_values([1, 2, 3, 4, 5], random_color), [])).to eq(116)
+      expect( EvaluatePoker.evaluate(init_from_colors(7, hand_random_colors(4))+init_hands([[6, random_color]]), [])).to eq(96)
+      expect( EvaluatePoker.evaluate(init_from_colors(7, hand_random_colors(3))+init_hands([[6, random_color], [8, random_color]]), [])).to eq(45)
+    end
+  end
   describe "#check_if_royal_flush" do
     it "should return true if a hand is a Royal Flush" do
-      expect( EvaluatePoker.check_if_royal_flush(init_from_values([1, 10, 11, 12, 13].shuffle, "hearts")) ).to eq(true)
+      expect( EvaluatePoker.check_if_royal_flush(init_from_values([1, 10, 11, 12, 13].shuffle, random_color)) ).to eq(true)
     end
     it "should return false if values are not going up to the ace" do
       r = random_value % 9
-      expect( EvaluatePoker.check_if_royal_flush(init_from_values([r, r+1, r+2, r+3, r+4], "hearts")) ).to eq(false)
+      expect( EvaluatePoker.check_if_royal_flush(init_from_values([r, r+1, r+2, r+3, r+4], random_color)) ).to eq(false)
     end
     it "should return false if values are not sequential" do
-      expect( EvaluatePoker.check_if_royal_flush(init_from_values([10,12,13,7,1], "hearts")) ).to eq(false)
+      expect( EvaluatePoker.check_if_royal_flush(init_from_values([10,11,12,random_value%13,1], random_color)) ).to eq(false)
     end
     it "should return false if values are not of the same suit" do
-      expect( EvaluatePoker.check_if_royal_flush(init_from_values([10,12,13,11], "hearts")+init_hands([[1, "clubs"]])) ).to eq(false)
+      r = hand_random_colors(2)
+      expect( EvaluatePoker.check_if_royal_flush(init_from_values([10,12,13,11], r[0])+init_hands([[1, r[1]]])) ).to eq(false)
     end
   end
   describe "#check_if_straight_flush" do
@@ -62,14 +71,15 @@ describe EvaluatePoker do
     end
     it "should return false if values are not of the same suit" do
       r = random_value%9
-      expect( EvaluatePoker.check_if_straight_flush(init_from_values([r, r+1, r+2, r+3], "hearts")+init_hands([[r+4, "clubs"]]))).to eq(false)
+      rc = hand_random_colors(2)
+      expect( EvaluatePoker.check_if_straight_flush(init_from_values([r, r+1, r+2, r+3], rc[0])+init_hands([[r+4, rc[1]]]))).to eq(false)
     end
     describe "Aces" do
       it "should handle aces as Lowest value" do
-        expect( EvaluatePoker.check_if_straight_flush(init_from_values([1,2,3,4,5], "hearts")) ).to eq(true)
+        expect( EvaluatePoker.check_if_straight_flush(init_from_values([1,2,3,4,5], random_color)) ).to eq(true)
       end
       it "should handle aces as Highest value" do
-        expect( EvaluatePoker.check_if_straight_flush(init_from_values([10,12,13,11,1], "hearts")) ).to eq(true)
+        expect( EvaluatePoker.check_if_straight_flush(init_from_values([10,12,13,11,1], random_color)) ).to eq(true)
       end
     end
   end
