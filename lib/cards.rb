@@ -43,18 +43,18 @@ class Card
   end
 
   def <=>(other)
-    if @color == other.color
-      if @value > other.value
-        return 1
-      elsif @value < other.value
+    if @value == other.value
+      if @color == other.color
+        return 0
+      elsif @color == [@color, other.color].sort[0]
         return -1
       else
-        return 0
+        return 1
       end
-    elsif @color == [@color, other.color].sort[0]
+    elsif @value < other.value
       return -1
     else
-      return 0
+      return 1
     end
   end
 
