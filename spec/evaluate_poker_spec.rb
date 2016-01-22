@@ -75,7 +75,8 @@ describe EvaluatePoker do
   end
   describe "#check_if_four" do
     it 'should return true if a hand is a Four of a Kind' do
-      expect( EvaluatePoker.check_if_four(init_from_colors(random_value, %w(diamonds spades clubs hearts))+init_hands([[9, "hearts"]]))).to eq(true)
+      r = random_value%13
+      expect( EvaluatePoker.check_if_four(init_from_colors(r, %w(diamonds spades clubs hearts))+init_hands([[r+1, "hearts"]]))).to eq(true)
     end
     it 'should return false if a hand does not include four cards with the same value' do
       expect( EvaluatePoker.check_if_four(init_hands([[9, random_color], [7, random_color], [3, random_color], [5, random_color], [11, random_color]]) )).to eq(false)
@@ -126,7 +127,7 @@ describe EvaluatePoker do
   describe "#check_if_pairs" do
     it 'should return true if a hand is Two Pairs' do
       r = hand_random_values(3)
-      expect( EvaluatePoker.check_if_pairs(init_from_colors(r[0], hand_random_colors(2)) + init_from_colors(r[1], hand_random_colors(2)) + init_hands([[r[2], random_color]])) ).to eq(false)
+      expect( EvaluatePoker.check_if_pairs(init_from_colors(r[0], hand_random_colors(2)) + init_from_colors(r[1], hand_random_colors(2)) + init_hands([[r[2], random_color]])) ).to eq(true)
     end
     it 'should return false if a hand does not include Two Pairs' do
       r = hand_random_values(4)
@@ -136,20 +137,20 @@ describe EvaluatePoker do
   describe "#check_if_pair" do
     it 'should return true if a hand is a Pair' do
       r = hand_random_values(4)
-      expect( EvaluatePoker.check_if_pair(init_from_colors(r[0], hand_random_colors(2)) + init_from_values([r[1], r[2], r[3]], random_color)) ).to eq(false)
+      expect( EvaluatePoker.check_if_pair(init_from_colors(r[0], hand_random_colors(2)) + init_from_values([r[1], r[2], r[3]], random_color)) ).to eq(true)
     end
     it 'should return false if a hand does not include a Pair' do
-      expect( EvaluatePoker.check_if_pair(init_hands(hand_random_values(5).map { |v| [v, random_color] })) ).to eq(true)
+      expect( EvaluatePoker.check_if_pair(init_hands(hand_random_values(5).map { |v| [v, random_color] })) ).to eq(false)
     end
   end
   describe '#get_high_card' do
     it 'should return the highest card of the hand' do
       r = random_color
-      expect( EvaluatePoker.get_high_card(init_hands([[3, random_color],[6, random_color],[8, random_color],[9, random_color],[10, r]]).shuffle)).to eq(init_hands([[10, r]]))
+      expect( EvaluatePoker.get_high_card(init_hands([[3, random_color],[6, random_color],[8, random_color],[9, random_color],[10, r]]).shuffle)).to eq(Card.new(10, r))
     end
     it 'should handle Aces as the highest card, always' do
       r = random_color
-      expect( EvaluatePoker.get_high_card(init_hands([[1, random_color],[6, random_color],[7, random_color],[10, random_color],[12, random_color]]))).to eq([1, r])
+      expect( EvaluatePoker.get_high_card(init_hands([[1, r],[6, random_color],[7, random_color],[10, random_color],[12, random_color]]))).to eq(Card.new(1, r))
     end
   end
 end
