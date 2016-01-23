@@ -37,6 +37,7 @@ def betting_round(starting_player, community, show_community = true)
     nobody_bet = true
     (1..PLAYERS_NUM).each do |player_index|
       player = PLAYERS[(starting_player + player_index) % PLAYERS_NUM]
+      next unless player.in_game?
 
       (puts community_cards(community) + "\n") if show_community
       nobody_bet = !lets_bet(player) && nobody_bet
@@ -126,4 +127,16 @@ community.add(1)
 
 betting_round(dealer, community) # RIVER
 
-# TODO : Implement the Showdown.
+betting_round(dealer, community) # SHOWDOWN
+
+puts "Community cards : #{community.to_s}"
+puts
+scores = PLAYERS.select { |player| player.in_game? }.map do |p|
+  puts "#{p.name} : #{p.show_hand}"
+  [p, EvaluatePoker.evaluate(p.hand.cards, community.cards)]
+end
+
+winner = scores.map { |e| e[0] }[scores.map { |e| e[1] }.index(scores.map { |e| e[1] }.max)]
+
+puts
+puts "The winner is #{winner.name}."

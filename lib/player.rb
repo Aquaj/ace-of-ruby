@@ -2,6 +2,7 @@ require_relative 'cards'
 
 # Represents a Player, not poker-specific.
 class Player
+  attr_reader :hand
   @@names = []
 
   def initialize(funds, deck, name, first_cards = 0)
@@ -42,6 +43,10 @@ class Player
 
   def stake
     @funds
+  end
+
+  def score
+    @hand.score
   end
 end
 

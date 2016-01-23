@@ -1,4 +1,4 @@
-# Implements a player's hand of cards, non poker-specific.
+# Implements a player's hand of cards, poker-specific.
 class Hand < Array
   attr_reader :cards
 
@@ -21,7 +21,7 @@ class Hand < Array
   end
 
   def to_s
-    @cards.reduce('[') { |a, e| a + "[ #{e.to_s.rjust(2)} ]" } + ']'
+    @cards.reduce('[') { |a, e| a + "[ #{e.to_s.rjust(3)} ]" } + ']'
   end
 end
 

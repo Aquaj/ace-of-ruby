@@ -2,7 +2,8 @@
 module EvaluatePoker
   def self.evaluate(hand, community_cards)
     table = table_of_all_checks(hand + community_cards)
-    digit = (table.rindex { |e| e.is_a? Card } + 1)
+    digit = (table.rindex { |e| e.is_a? Card })
+    digit = (digit.nil? ? 0 : digit + 1)
     digit * 13 + (table[digit - 1].value + 11) % 13
   end
 
