@@ -45,7 +45,7 @@ describe 'valuatePoker' do
         EvaluatePoker.evaluate(
           init_from_values(
             [1, 2, 3, 4, 5], random_color), []))
-        .to eq(116)
+        .to eq(107)
       expect(
         EvaluatePoker.evaluate(init_from_colors(
           7, hand_random_colors(4)) +
@@ -55,7 +55,7 @@ describe 'valuatePoker' do
         EvaluatePoker.evaluate(init_from_colors(
           7, hand_random_colors(3)) +
         init_hands([[6, random_color], [8, random_color]]), []))
-        .to eq(45)
+        .to eq(44)
     end
   end
   describe '#check_if_royal_flush' do
@@ -63,7 +63,7 @@ describe 'valuatePoker' do
       expect(
         EvaluatePoker.check_if_royal_flush(
           init_from_values([1, 10, 11, 12, 13].shuffle, random_color)))
-        .to eq(true)
+        .not_to be(false)
     end
     it 'should return false if values are not going up to the ace' do
       r = random_value % 9
@@ -94,7 +94,7 @@ describe 'valuatePoker' do
         EvaluatePoker.check_if_straight_flush(
           init_from_values([r, r + 1, r + 2, r + 3, r + 4].shuffle,
                            random_color)))
-        .to eq(true)
+        .not_to be(false)
     end
     it 'should return false if values are not sequential' do
       r = random_value % 6 + 2
@@ -117,13 +117,13 @@ describe 'valuatePoker' do
         expect(
           EvaluatePoker.check_if_straight_flush(
             init_from_values([1, 2, 3, 4, 5].shuffle, random_color)))
-          .to eq(true)
+          .not_to be(false)
       end
       it 'should handle aces as Highest value' do
         expect(
           EvaluatePoker.check_if_straight_flush(
             init_from_values([10, 11, 12, 13, 1].shuffle, random_color)))
-          .to eq(true)
+          .not_to be(false)
       end
     end
   end
@@ -133,7 +133,7 @@ describe 'valuatePoker' do
       expect(
         EvaluatePoker.check_if_four(
           init_from_colors(r, hand_random_colors(4)) +
-          init_hands([[r + 1, random_color]]))).to eq(true)
+          init_hands([[r + 1, random_color]]))).not_to be(false)
     end
     it 'should return false if a hand does not include a Four of a Kind' do
       expect(
@@ -153,7 +153,7 @@ describe 'valuatePoker' do
         EvaluatePoker.check_if_house(
           init_from_colors(r, hand_random_colors(3)) +
           init_from_colors(r + 1, hand_random_colors(2))))
-        .to eq(true)
+        .not_to be(false)
     end
     it 'should return false if a hand does not include a Full House' do
       hand = hand_random_values(5)
@@ -172,7 +172,7 @@ describe 'valuatePoker' do
       expect(
         EvaluatePoker.check_if_flush(
           init_from_values(hand_random_values(5), random_color)))
-        .to eq(true)
+        .not_to be(false)
     end
     it 'should return false if a hand does not include a Flush' do
       colors = hand_random_colors(2)
@@ -191,7 +191,7 @@ describe 'valuatePoker' do
         EvaluatePoker.check_if_straight(
           init_hands([r, r + 1, r + 2, r + 3, r + 4]
             .map { |v| [v, random_color] })))
-        .to eq(true)
+        .not_to be(false)
     end
     it 'should return false if a hand does not include a Straight' do
       r = random_value % 8 + 1
@@ -209,7 +209,7 @@ describe 'valuatePoker' do
         EvaluatePoker.check_if_three(
           init_from_colors(r[0], hand_random_colors(3)) +
           init_from_values([r[1], r[2]], random_color)))
-        .to eq(true)
+        .not_to be(false)
     end
     it 'should return false if a hand does not include a Three of a Kind' do
       r = hand_random_values(4)
@@ -228,7 +228,7 @@ describe 'valuatePoker' do
           init_from_colors(r[0], hand_random_colors(2)) +
           init_from_colors(r[1], hand_random_colors(2)) +
           init_hands([[r[2], random_color]])))
-        .to eq(true)
+        .not_to be(false)
     end
     it 'should return false if a hand does not include Two Pairs' do
       r = hand_random_values(4)
@@ -246,7 +246,7 @@ describe 'valuatePoker' do
         EvaluatePoker.check_if_pair(
           init_from_colors(r[0], hand_random_colors(2)) +
             init_from_values([r[1], r[2], r[3]], random_color)))
-        .to eq(true)
+        .not_to be(false)
     end
     it 'should return false if a hand does not include a Pair' do
       expect(
@@ -271,7 +271,7 @@ describe 'valuatePoker' do
              [10, r]]).shuffle))
         .to eq(Card.new(10, r))
     end
-    it 'should handle Aces as the highest card, always' do
+    it 'should handle Aces as the highest card outside of straights' do
       r = random_color
       expect(
         EvaluatePoker.get_high_card(

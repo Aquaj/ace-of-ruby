@@ -1,10 +1,9 @@
 # Module in charge of calculating scores for each hand.
 module EvaluatePoker
   def self.evaluate(hand, community_cards)
-    # FIXME: 1..5 straight(/flush) beats 2..6
-    # FIXME: Highest card can be one not in
-    digit = (table_of_all_checks(hand + community_cards).rindex(true) + 1) * 13
-    digit + (get_high_card(hand + community_cards).value + 11) % 13
+    table = table_of_all_checks(hand + community_cards)
+    digit = (table.rindex { |e| e.is_a? Card } + 1)
+    digit*13 + (table[digit-1].value + 11) % 13
   end
 
   def self.table_of_all_checks(cards)
@@ -21,9 +20,10 @@ module EvaluatePoker
 
   def self.check_if_royal_flush(cards)
     return false unless cards.all? { |c| c.color == cards[0].color }
-    cards
+    return false if cards
       .sort
-      .map(&:value) == [1, 10, 11, 12, 13]
+      .map(&:value) != [1, 10, 11, 12, 13]
+    return get_high_card(cards)
   end
 
   def self.check_if_straight_flush(cards)
@@ -32,24 +32,30 @@ module EvaluatePoker
   end
 
   def self.check_if_four(cards)
-    cards
+    fours = cards
       .group_by(&:value)
-      .any? { |_k, v| v.length == 4 }
+      .select { |_k, v| v.length == 4 }
+      .values
+    return false if fours.length == 0
+    return get_high_card(fours[0])
   end
 
   def self.check_if_house(cards)
-    check_if_pair(cards) &&
-      check_if_three(cards)
+    return false if !check_if_pair(cards) || !check_if_three(cards)
+    return get_high_card(cards)
   end
 
   def self.check_if_flush(cards)
-    cards
+    flush = cards
       .group_by(&:color)
-      .any? { |_k, v| v.length == 5 }
+      .select { |_k, v| v.length == 5 }
+      .values
+    return false if flush.length == 0
+    return get_high_card(flush[0])
   end
 
   def self.check_if_straight(cards)
-    cards
+    return false if !(cards
       .map(&:value)
       .sort
       .each_cons(2)
@@ -58,29 +64,39 @@ module EvaluatePoker
         .map { |e| ((e.value + 11) % 13 + 1) }
         .sort
         .each_cons(2)
-        .reduce(true) { |a, e| a && (e[0] + 1 == e[1]) }
+        .reduce(true) { |a, e| a && (e[0] + 1 == e[1]) })
+    return get_high_card(cards, false)
   end
 
   def self.check_if_three(cards)
-    cards
+    threes = cards
       .group_by(&:value)
-      .any? { |_k, v| v.length == 3 }
+      .select { |_k, v| v.length == 3 }
+      .values
+    return false if threes.length == 0
+    return get_high_card(threes[0])
   end
 
   def self.check_if_pairs(cards)
-    cards
+    pairs = cards
       .group_by(&:value)
-      .count { |_k, v| v.length == 2 } == 2
+      .select { |_k, v| v.length == 2 }
+      .values
+    return false if pairs.length != 2
+    return get_high_card(pairs.reduce(&:+))
   end
 
   def self.check_if_pair(cards)
-    cards
+    pair = cards
       .group_by(&:value)
-      .count { |_k, v| v.length == 2 } == 1
+      .select { |_k, v| v.length == 2 }
+      .values
+    return false if pair.length == 0
+    return get_high_card(pair[0])
   end
 
-  def self.get_high_card(cards)
-    return cards.select { |v| v.value == 1 }[0] if cards.map(&:value).include? 1
+  def self.get_high_card(cards, count_ace = true, tmp = false)
+    return cards.select { |v| v.value == 1 }[0] if (count_ace && cards.map(&:value).include?(1))
     cards.max
   end
 end
