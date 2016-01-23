@@ -86,9 +86,13 @@ end
 
 INIT_STAKE = 50
 SMALL_BLIND = 1
-
-PLAYERS_NUM = get_input('How many players are involed?').to_i
-fail ArgumentError, 'We need some players !' if PLAYERS_NUM <= 0
+PLAYERS_NUM = 0
+while PLAYERS_NUM < 3
+  PLAYERS_NUM = get_input('How many players are involed?').to_i
+  if PLAYERS_NUM < 3
+    puts "We need at least 3 players ! (dealer, small blind, big blind)"
+  end
+end
 puts
 
 d = Deck.new
