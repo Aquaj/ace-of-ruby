@@ -5,11 +5,15 @@ class Pot < Hash
   end
 
   def bet_of(player)
-    self[player]
+    if player.in_game?
+      self[player]
+    else
+      0
+    end
   end
 
   def whole_pot
-    reduce(0) { |a, e| a + e[0] }
+    values.reduce(0) { |a, e| a + e }
   end
 
   def everyone_at_bet?

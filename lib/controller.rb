@@ -1,7 +1,7 @@
-require_relative 'mvc_deck'
-require_relative 'mvc_pot'
-require_relative 'mvc_player'
-require_relative 'mvc_view'
+require_relative 'deck'
+require_relative 'pot'
+require_relative 'player'
+require_relative 'view'
 require_relative 'evaluate_poker'
 
 class Controller

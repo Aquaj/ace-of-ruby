@@ -1,4 +1,4 @@
-require_relative 'mvc_cards'
+require_relative 'card'
 # Implements a Deck.
 class Deck
   attr_accessor :cards

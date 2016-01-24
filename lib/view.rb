@@ -1,9 +1,4 @@
 class View
-  # @view = View.new
-  def initialize
-
-  end
-
   # @view.get_number_of_players()
   def get_number_of_players
     answer = 0

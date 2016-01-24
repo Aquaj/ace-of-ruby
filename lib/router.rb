@@ -1,5 +1,3 @@
-require_relative 'mvc_router'
-
 class Router
   def initialize(controller)
     @controller = controller

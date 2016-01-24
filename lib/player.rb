@@ -1,14 +1,13 @@
-require_relative 'cards'
-
-# Represents a Player, not poker-specific.
+# Model : represents a player.
 class Player
   attr_reader :hand
   @@names = []
 
   def initialize(funds, deck, name, first_cards = 0)
-    @hand = Hand.new(deck, first_cards)
+    @hand = []
     @funds = funds
     @status = :playing
+    @deck = deck
     name = name.to_sym
     fail ArgumentError,
          'Name already taken. Please pick other.' if @@names.include? name
@@ -17,15 +16,15 @@ class Player
   end
 
   def pick(num = 1)
-    @hand.add(num)
+    num.times { @hand << @deck.pick }
   end
 
-  def show_hand
-    @hand.to_s
+  def reset
+    @status = :playing
+    @hand = []
   end
 
   def bets(bet, pot) # TODO: Implement fund limits.
-    @funds -= bet
     pot.add_bet(self, bet)
   end
 
@@ -33,7 +32,8 @@ class Player
     @name.to_s
   end
 
-  def fold
+  def fold(pot)
+    @funds -= pot.bet_of self
     @status = :out
   end
 
@@ -47,6 +47,10 @@ class Player
 
   def score
     @hand.score
+  end
+
+  def wins(amount)
+    @funds += amount
   end
 end
 
