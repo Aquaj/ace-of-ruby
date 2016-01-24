@@ -3,7 +3,7 @@ class Player
   attr_reader :hand
   @@names = []
 
-  def initialize(funds, deck, name, first_cards = 0)
+  def initialize(funds, deck, name)
     @hand = []
     @funds = funds
     @status = :playing

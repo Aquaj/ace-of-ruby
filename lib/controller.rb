@@ -4,35 +4,35 @@ require_relative 'player'
 require_relative 'view'
 require_relative 'evaluate_poker'
 
+# Controller
 class Controller
   def initialize
-    @INIT_STAKE = 50
-    @SMALL_BLIND = 1
-    @PLAYERS = []
-    @PLAYERS_NAMES = []
+    @small_blind = 1
+    @players = []
+    @players_names = []
     @view = View.new
-    @NUM_OF_PLAYERS = @view.get_number_of_players
+    @num_of_players = @view.get_number_of_players
     @deck = Deck.new
     @community_cards = []
     roles(0)
 
-    @NUM_OF_PLAYERS.times do |n|
-      name = @view.get_player_name(@PLAYERS_NAMES)
-      @PLAYERS_NAMES << name
-      stake = @view.get_player_stake(@SMALL_BLIND)
-      @PLAYERS << Player.new(stake, @deck, name)
+    @num_of_players.times do
+      name = @view.get_player_name(@players_names)
+      @players_names << name
+      stake = @view.get_player_stake(@small_blind)
+      @players << Player.new(stake, @deck, name)
     end
 
-    @pot = Pot.new(@PLAYERS)
+    @pot = Pot.new(@players)
   end
 
   def game
     @deck.shuffle
-    @PLAYERS[@small_blinder].bets(@SMALL_BLIND, @pot)
-    @PLAYERS[@big_blinder].bets(@SMALL_BLIND * 2, @pot)
+    @players[@small_blinder].bets(@small_blind, @pot)
+    @players[@big_blinder].bets(@small_blind * 2, @pot)
 
-    (1..@NUM_OF_PLAYERS).each do |player_index|
-      player = @PLAYERS[(@big_blinder + player_index) % @NUM_OF_PLAYERS]
+    (1..@num_of_players).each do |player_index|
+      player = @players[(@big_blinder + player_index) % @num_of_players]
       player.pick(2)
     end
 
@@ -45,21 +45,21 @@ class Controller
     roles(@dealer + 1)
     @deck = Deck.new
     @community_cards = []
-    @pot = Pot.new(@PLAYERS)
-    @PLAYERS.each { |player| player.reset }
+    @pot = Pot.new(@players)
+    @players.each(&:reset)
   end
 
-private
+  private
+
   def roles(index)
-    @dealer = index % @NUM_OF_PLAYERS
-    @small_blinder = (@dealer + 1) % @NUM_OF_PLAYERS
-    @big_blinder = (@small_blinder + 1) % @NUM_OF_PLAYERS
+    @dealer = index % @num_of_players
+    @small_blinder = (@dealer + 1) % @num_of_players
+    @big_blinder = (@small_blinder + 1) % @num_of_players
   end
 
   def preflop
     betting_round
   end
-
 
   def flop
     @deck.pick
@@ -86,14 +86,14 @@ private
   end
 
   def showdown
-    still_in_game = @PLAYERS.select { |player| player.in_game? }
-    @view.big_reveal(@community_cards, @PLAYERS.select { |p| p.in_game? }.map { |p| [p.name, p.hand] })
+    still_in_game = @players.select(&:in_game)
+    @view.big_reveal(@community_cards, still_playing.map { |p| [p.name, p.hand] })
     scores = still_in_game.map do |p|
       [p, EvaluatePoker.evaluate(p.hand + @community_cards)]
     end
     winner, score = scores[scores.map { |e| e[1] }.index(scores.map { |e| e[1] }.max)]
     type = score / 13
-    card = ((score + 1) % 13 + 1).to_s.gsub("11", "Jack").gsub("12", "Queen").gsub("13", "King").gsub("1", "Ace")
+    card = ((score + 1) % 13 + 1).to_s.gsub('11', 'Jack').gsub('12', 'Queen').gsub('13', 'King').gsub('1', 'Ace')
     winner.wins(@pot.whole_pot)
     losers = still_in_game.reject { |p| p == winner }
     losers.each { |p| p.fold(@pot) }
@@ -104,8 +104,8 @@ private
     finished = false
     loop do
       answers = []
-      (1..@NUM_OF_PLAYERS).each do |player_index|
-        player = @PLAYERS[(player_index + @big_blinder) % @NUM_OF_PLAYERS]
+      (1..@num_of_players).each do |player_index|
+        player = @players[(player_index + @big_blinder) % @num_of_players]
         next unless player.in_game?
         to_match = @pot.current_bet
 
@@ -116,18 +116,25 @@ private
         @view.state_of_game_for_player(@pot.bet_of(player), player.stake)
 
         answers << fold_call_raise(player, current, to_match)
-        next_player_index = (player_index + @big_blinder + 1) % @NUM_OF_PLAYERS
-        until @PLAYERS[next_player_index % @NUM_OF_PLAYERS].in_game?
+        next_player_index = (player_index + @big_blinder + 1) % @num_of_players
+        until @players[next_player_index % @num_of_players].in_game?
           next_player_index += 1
         end
-        if answers.join == 'k' * @PLAYERS.select { |p| p.in_game? }.length
-          @view.end_of_part
-          finished = true
-        else
-          @view.wait_for_next(@PLAYERS[next_player_index].name)
-        end
+        finished = end_of_turn(answers.join == 'k' * still_playing.length, next_player_index)
       end
       break if finished
+    end
+  end
+
+  def still_playing
+    @players.select(&:in_game?)
+  end
+
+  def end_of_turn(end_of_part, index)
+    if end_of_part
+      @view.end_of_part
+    else
+      @view.wait_for_next(@players[index].name)
     end
   end
 
@@ -136,7 +143,7 @@ private
     answer = @view.player_choice(check)
     case answer
     when 'f'
-      if @view.folding == "y"
+      if @view.folding == 'y'
         player.fold(@pot)
         @view.folded
       end

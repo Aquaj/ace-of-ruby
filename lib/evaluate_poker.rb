@@ -89,11 +89,11 @@ module EvaluatePoker
 
   def self.check_if_pair(cards)
     pairs = cards
-           .group_by(&:value)
-           .select { |_k, v| v.length == 2 }
-           .values
+            .group_by(&:value)
+            .select { |_k, v| v.length == 2 }
+            .values
     return false if pairs.length == 0
-    get_high_card(pairs.sort_by { |p| p[0]}[0])
+    get_high_card(pairs.sort_by { |p| p[0] }[0])
   end
 
   def self.get_high_card(cards, count_ace = true)

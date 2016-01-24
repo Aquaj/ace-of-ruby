@@ -1,3 +1,4 @@
+# Router.
 class Router
   def initialize(controller)
     @controller = controller
@@ -8,14 +9,12 @@ class Router
   def run
     while @running
       @controller.game
-      puts
-      puts "Do you want to play another game ? (y/n)"
-      print "> "
+      puts "\nDo you want to play another game ? (y/n)\n> "
       answer = gets.chomp
-      if answer == "n"
+      if answer == 'n'
         stop
-      elsif answer != "y"
-        puts "Please answer (y)es or (n)o."
+      elsif answer != 'y'
+        puts 'Please answer (y)es or (n)o.'
       end
     end
   end
@@ -23,5 +22,4 @@ class Router
   def stop
     @running = false
   end
-
 end
