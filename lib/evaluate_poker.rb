@@ -1,10 +1,11 @@
 # Module in charge of calculating scores for each hand.
 module EvaluatePoker
-  def self.evaluate(hand, community_cards)
-    table = table_of_all_checks(hand + community_cards)
+  def self.evaluate(cards)
+    table = table_of_all_checks(cards)
     digit = (table.rindex { |e| e.is_a? Card })
+    card = (digit.nil? ? 0 : table[digit].value)
     digit = (digit.nil? ? 0 : digit + 1)
-    digit * 13 + (table[digit - 1].value + 11) % 13
+    digit * 13 + (card + 11) % 13
   end
 
   def self.table_of_all_checks(cards)
@@ -87,12 +88,12 @@ module EvaluatePoker
   end
 
   def self.check_if_pair(cards)
-    pair = cards
+    pairs = cards
            .group_by(&:value)
            .select { |_k, v| v.length == 2 }
            .values
-    return false if pair.length == 0
-    get_high_card(pair[0])
+    return false if pairs.length == 0
+    get_high_card(pairs.sort_by { |p| p[0]}[0])
   end
 
   def self.get_high_card(cards, count_ace = true)

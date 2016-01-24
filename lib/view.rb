@@ -14,7 +14,7 @@ class View
 
   # @view.get_player_name(@PLAYERS_NAMES)
   def get_player_name(list_of_names)
-    system `clear`
+    system 'clear'
     puts "Please state a name?"
     print "> "
     name = gets.chomp
@@ -47,14 +47,14 @@ class View
 
   # @view.state_of_the_game(@community_cards)
   def state_of_the_game(community, to_match)
-    system `clear`
+    system 'clear'
     if community.length > 0
       puts "There are currently #{community.length} cards on the table :"
       puts "[#{community.reduce("") { |a, e| a + "[ "+e.to_s.rjust(4)+" ]" }}]"
       puts
     else
       puts
-      puts
+      puts "No cards on the table yet !"
       puts
     end
     puts "You currently have to match $#{to_match}"
@@ -100,7 +100,7 @@ class View
   end
 
   def big_reveal(community, cards)
-    system `clear`
+    system 'clear'
     print "Cards on the table :"
     puts "[#{community.reduce("") { |a, e| a + "[ "+e.to_s.rjust(4)+" ]" }}]"
     cards.each do |name, hand|

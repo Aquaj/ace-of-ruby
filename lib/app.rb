@@ -1,5 +1,5 @@
-require_relative 'mvc_controller'
-require_relative 'mvc_router'
+require_relative 'controller'
+require_relative 'router'
 
 controller = Controller.new
 router = Router.new(controller)
