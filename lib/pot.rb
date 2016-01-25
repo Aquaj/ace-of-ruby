@@ -1,7 +1,11 @@
 # Class handling the bets of every player.
 class Pot < Hash
+
+  @@pots = []
+
   def initialize(players)
     players.each { |player| self[player] = 0 }
+    @@pots << self
   end
 
   def bet_of(player)
@@ -30,5 +34,13 @@ class Pot < Hash
 
   def current_bet
     select { |player, _bet| player.in_game? }.max_by { |_player, bet| bet }[1]
+  end
+
+  def self.bet_of(player)
+    @@pots.reduce(0) { |bet, pot| bet + pot[player].to_i }
+  end
+
+  def self.pots
+    @@pots
   end
 end

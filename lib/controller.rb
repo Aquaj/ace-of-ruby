@@ -86,18 +86,37 @@ class Controller
   end
 
   def showdown
-    still_in_game = @players.select(&:in_game)
+    still_in_game = @players.select(&:in_game?)
     @view.big_reveal(@community_cards, still_playing.map { |p| [p.name, p.hand] })
     scores = still_in_game.map do |p|
       [p, EvaluatePoker.evaluate(p.hand + @community_cards)]
     end
-    winner, score = scores[scores.map { |e| e[1] }.index(scores.map { |e| e[1] }.max)]
-    type = score / 13
-    card = ((score + 1) % 13 + 1).to_s.gsub('11', 'Jack').gsub('12', 'Queen').gsub('13', 'King').gsub('1', 'Ace')
-    winner.wins(@pot.whole_pot)
-    losers = still_in_game.reject { |p| p == winner }
-    losers.each { |p| p.fold(@pot) }
-    @view.present_winner(winner.name, type, card)
+    Pot.pots.each do |pot|
+      winner, score = scores[scores.map { |e| e[1] }.index(scores.map { |e| e[1] }.max)]
+      type = score / 13
+      card = ((score + 1) % 13 + 1).to_s.gsub('11', 'Jack').gsub('12', 'Queen').gsub('13', 'King').gsub('1', 'Ace')
+      winner.wins(pot.whole_pot)
+      losers = still_in_game.reject { |p| p == winner }
+      losers.each { |p| p.fold(pot) }
+      if Pot.pots.length > 1
+        @view.present_winner(winner.name, type, card, ordinalize(Pot.pots.index(pot)+1))
+      else
+        @view.present_winner(winner.name, type, card)
+      end
+    end
+  end
+
+  def ordinalize(num)
+    if (11..13).include?(num % 100)
+      "#{num}th"
+    else
+      case num % 10
+        when 1; "#{num}st"
+        when 2; "#{num}nd"
+        when 3; "#{num}rd"
+        else    "#{num}th"
+      end
+    end
   end
 
   def betting_round
@@ -120,7 +139,8 @@ class Controller
         until @players[next_player_index % @num_of_players].in_game?
           next_player_index += 1
         end
-        finished = end_of_turn(answers.join == 'k' * still_playing.length, next_player_index)
+        finished = answers.join == 'k' * still_playing.length
+        end_of_turn(finished, next_player_index)
       end
       break if finished
     end
@@ -132,7 +152,7 @@ class Controller
 
   def end_of_turn(end_of_part, index)
     if end_of_part
-      @view.end_of_part
+      @view.end_of_part(@players[index].name, @community_cards.length == 3)
     else
       @view.wait_for_next(@players[index].name)
     end
