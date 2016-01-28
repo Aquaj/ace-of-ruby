@@ -77,6 +77,12 @@ class View
     answer
   end
 
+  def youre_all_in
+    puts
+    puts "You're all in. You can only sit and wait for now."
+    puts
+  end
+
   def end_of_part(name, end_game)
     puts "Everybody checked! Let's move on."
     wait_for_next(name) unless end_game

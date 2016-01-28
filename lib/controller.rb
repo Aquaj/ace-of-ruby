@@ -23,13 +23,13 @@ class Controller
       @players << Player.new(stake, @deck, name)
     end
 
-    @pot = Pot.new(@players)
+    @pots = [Pot.new(@players)]
   end
 
   def game
     @deck.shuffle
-    @players[@small_blinder].bets(@small_blind, @pot)
-    @players[@big_blinder].bets(@small_blind * 2, @pot)
+    @players[@small_blinder].bets(@small_blind, @pots)
+    @players[@big_blinder].bets(@small_blind * 2, @pots)
 
     (1..@num_of_players).each do |player_index|
       player = @players[(@big_blinder + player_index) % @num_of_players]
@@ -45,7 +45,7 @@ class Controller
     roles(@dealer + 1)
     @deck = Deck.new
     @community_cards = []
-    @pot = Pot.new(@players)
+    @pots = [Pot.new(@players)]
     @players.each(&:reset)
   end
 
@@ -91,15 +91,17 @@ class Controller
     scores = still_in_game.map do |p|
       [p, EvaluatePoker.evaluate(p.hand + @community_cards)]
     end
-    Pot.pots.each do |pot|
-      winner, score = scores[scores.map { |e| e[1] }.index(scores.map { |e| e[1] }.max)]
+    @pots.each do |pot|
+      eligible_winners = pot.select { |_k,v| v > 0 }
+      binding.pry
+      winner, score = scores.select { |f| eligible_winners.include?(f[0]) }[scores.map { |e| e[1] }.index(scores.map { |e| e[1] }.max)]
       type = score / 13
       card = ((score + 1) % 13 + 1).to_s.gsub('11', 'Jack').gsub('12', 'Queen').gsub('13', 'King').gsub('1', 'Ace')
       winner.wins(pot.whole_pot)
       losers = still_in_game.reject { |p| p == winner }
       losers.each { |p| p.fold(pot) }
-      if Pot.pots.length > 1
-        @view.present_winner(winner.name, type, card, ordinalize(Pot.pots.index(pot)+1))
+      if @pots.length > 1
+        @view.present_winner(winner.name, type, card, ordinalize(@pots.index(pot)+1))
       else
         @view.present_winner(winner.name, type, card)
       end
@@ -126,24 +128,30 @@ class Controller
       (1..@num_of_players).each do |player_index|
         player = @players[(player_index + @big_blinder) % @num_of_players]
         next unless player.in_game?
-        to_match = @pot.current_bet
+        to_match = Pot.current_bet
 
         @view.state_of_the_game(@community_cards, to_match)
 
-        current = @pot.bet_of player
+        current = Pot.bet_of player
         @view.player_state(player.name, player.hand)
-        @view.state_of_game_for_player(@pot.bet_of(player), player.stake)
+        @view.state_of_game_for_player(Pot.bet_of(player), player.stake)
 
         answers << fold_call_raise(player, current, to_match)
         next_player_index = (player_index + @big_blinder + 1) % @num_of_players
         until @players[next_player_index % @num_of_players].in_game?
           next_player_index += 1
         end
-        finished = answers.join == 'k' * still_playing.length
+        p still_playing.map(&:name)
+        p answers
+        finished = answers.join == 'k' * still_betting.length
         end_of_turn(finished, next_player_index)
       end
       break if finished
     end
+  end
+
+  def still_betting
+    still_playing.reject { |p| p.is_all_in? Pot.current_bet }
   end
 
   def still_playing
@@ -160,22 +168,27 @@ class Controller
 
   def fold_call_raise(player, current, to_match)
     check = current == to_match
-    answer = @view.player_choice(check)
-    case answer
-    when 'f'
-      if @view.folding == 'y'
-        player.fold(@pot)
-        @view.folded
-      end
-    when 'c'
-      answer = 'k' if check
-      @view.calling(check)
-      player.bets(to_match - current, @pot)
-    when 'r'
-      bet = @view.raising
-      player.bets(to_match - current + bet, @pot)
+    if player.is_all_in?(current)
+      @view.youre_all_in
+    else
+      answer = @view.player_choice(check)
+        case answer
+        when 'f'
+          if @view.folding == 'y'
+            player.fold(@pots)
+            @view.folded
+          end
+        when 'c'
+          answer = 'k' if check
+          @view.calling(check)
+          player.bets(to_match - current, @pots)
+        when 'r'
+          bet = @view.raising
+          player.bets(to_match - current + bet, @pots)
+        end
     end
-    @view.state_of_game_for_player(@pot.bet_of(player), player.stake)
+    @pots = Pot.pots
+    @view.state_of_game_for_player(Pot.bet_of(player), player.stake)
     answer
   end
 end
