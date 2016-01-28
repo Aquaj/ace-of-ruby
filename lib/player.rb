@@ -24,8 +24,16 @@ class Player
     @hand = []
   end
 
-  def bets(bet, pot) # TODO: Implement fund limits.
-    pot.add_bet(self, bet)
+  def is_all_in?(bet)
+    @funds <= bet
+  end
+
+  def bets(bet, pot)
+    if pot.bet_of(self) + bet <= @funds
+      pot.add_bet(self, bet)
+    else
+      pot.add_bet(self, @funds - pot.bet_of(self))
+    end
   end
 
   def name

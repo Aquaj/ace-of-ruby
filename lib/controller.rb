@@ -86,18 +86,21 @@ class Controller
   end
 
   def showdown
-    still_in_game = @players.select(&:in_game)
+    still_in_game = @players.select(&:in_game?)
     @view.big_reveal(@community_cards, still_playing.map { |p| [p.name, p.hand] })
-    scores = still_in_game.map do |p|
-      [p, EvaluatePoker.evaluate(p.hand + @community_cards)]
+    scores = still_in_game
+      .map { |p| [p, EvaluatePoker.evaluate(p.hand + @community_cards)] }
+      .sort_by { |score| -score[1] }
+    # winner, score = scores[scores.map { |e| e[1] }.index(scores.map { |e| e[1] }.max)]
+    pot_amount = @pot.whole_pot
+    scores.reduce(pot_amount) do |sum, score|
+      winner = score[0]
+      type = score[1] / 13
+      card = ((score[1] + 1) % 13 + 1).to_s.gsub('11', 'Jack').gsub('12', 'Queen').gsub('13', 'King').gsub('1', 'Ace')
+      to_win = [(@pot.bet_of(winner)*@num_of_players), sum].min
+      @view.present_winner(winner.name, type, card, to_win)
+      sum - to_win
     end
-    winner, score = scores[scores.map { |e| e[1] }.index(scores.map { |e| e[1] }.max)]
-    type = score / 13
-    card = ((score + 1) % 13 + 1).to_s.gsub('11', 'Jack').gsub('12', 'Queen').gsub('13', 'King').gsub('1', 'Ace')
-    winner.wins(@pot.whole_pot)
-    losers = still_in_game.reject { |p| p == winner }
-    losers.each { |p| p.fold(@pot) }
-    @view.present_winner(winner.name, type, card)
   end
 
   def betting_round
@@ -120,7 +123,10 @@ class Controller
         until @players[next_player_index % @num_of_players].in_game?
           next_player_index += 1
         end
-        finished = end_of_turn(answers.join == 'k' * still_playing.length, next_player_index)
+        p still_playing.map(&:name)
+        p answers
+        finished = answers.join == 'k' * still_betting.length && answers.length == still_playing.length
+        end_of_turn(finished, next_player_index)
       end
       break if finished
     end
@@ -130,9 +136,13 @@ class Controller
     @players.select(&:in_game?)
   end
 
+  def still_betting
+    still_playing.reject { |p| p.is_all_in? @pot.current_bet }
+  end
+
   def end_of_turn(end_of_part, index)
     if end_of_part
-      @view.end_of_part
+      @view.end_of_part(@players[index].name, @community_cards.length == 3)
     else
       @view.wait_for_next(@players[index].name)
     end
@@ -140,20 +150,24 @@ class Controller
 
   def fold_call_raise(player, current, to_match)
     check = current == to_match
-    answer = @view.player_choice(check)
-    case answer
-    when 'f'
-      if @view.folding == 'y'
-        player.fold(@pot)
-        @view.folded
-      end
-    when 'c'
-      answer = 'k' if check
-      @view.calling(check)
-      player.bets(to_match - current, @pot)
-    when 'r'
-      bet = @view.raising
-      player.bets(to_match - current + bet, @pot)
+    if player.is_all_in?(current)
+      @view.youre_all_in
+    else
+      answer = @view.player_choice(check)
+        case answer
+        when 'f'
+          if @view.folding == 'y'
+            player.fold(@pot)
+            @view.folded
+          end
+        when 'c'
+          answer = 'k' if check
+          @view.calling(check)
+          player.bets(to_match - current, @pot)
+        when 'r'
+          bet = @view.raising
+          player.bets(to_match - current + bet, @pot)
+        end
     end
     @view.state_of_game_for_player(@pot.bet_of(player), player.stake)
     answer

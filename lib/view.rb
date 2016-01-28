@@ -66,8 +66,17 @@ class View
     puts "Your bet: $#{bet} || $#{stake} in your stake"
   end
 
+  def end_of_part(name, end_game)
+    puts "Everybody checked! Let's move on."
+    wait_for_next(name) unless end_game
+    gets.chomp if end_game
+  end
+
   def wait_for_next(name)
-    puts "It's now #{name}'s turn. Press Enter when ready."
+    puts "It's now #{name}'s turn. Press Enter."
+    gets.chomp
+    system 'clear'
+    puts "Hello #{name}. Press Enter when ready to start your turn."
     gets.chomp
   end
 
@@ -82,9 +91,10 @@ class View
     answer
   end
 
-  def end_of_part
-    puts "Everybody checked! Let's move on."
-    gets.chomp
+  def youre_all_in
+    puts
+    puts "You're all in. You can only sit and wait for now."
+    puts
   end
 
   def burnt
@@ -102,30 +112,31 @@ class View
     puts
   end
 
-  def present_winner(winner, type, card)
+  def present_winner(winner, type, card, money)
+    # binding.pry
     case type
     when 0
-      type = 'a highest card of #{card}'
+      type = "a highest card of #{card}"
     when 1
-      type = 'a pair of #{card}s'
+      type = "a pair of #{card}s"
     when 2
-      type = 'two pairs, the highest at #{card}s'
+      type = "two pairs, the highest at #{card}s"
     when 3
-      type = 'three #{card}s'
+      type = "three #{card}s"
     when 4
-      type = 'a straight to the #{card}'
+      type = "a straight to the #{card}"
     when 5
-      type = 'a flush to the #{card}'
+      type = "a flush to the #{card}"
     when 6
-      type = 'a house to the #{card}s'
+      type = "a house to the #{card}s"
     when 7
-      type = 'four #{card}s'
+      type = "four #{card}s"
     when 8
-      type = 'a straight flush to the #{card}'
+      type = "a straight flush to the #{card}"
     when 9
-      type = 'a royal flush'
+      type = "a royal flush"
     end
-    puts "The winner is #{winner} with #{type} !"
+    puts "#{winner} wins this round with #{type} ! They win $#{money}." unless money == 0
   end
 
   def folding
