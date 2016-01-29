@@ -9,7 +9,7 @@ class Router
   def run
     while @running
       @controller.game
-      puts "\nDo you want to play another game ? (y/n)\n> "
+      print "\nDo you want to play another game ? (y/n)\n> "
       answer = gets.chomp
       if answer == 'n'
         stop

@@ -41,7 +41,6 @@ class Player
   end
 
   def fold(pot)
-    @funds -= pot.bet_of self
     @status = :out
   end
 
@@ -55,6 +54,10 @@ class Player
 
   def score
     @hand.score
+  end
+
+  def loses(amount)
+    @funds -= amount
   end
 
   def wins(amount)

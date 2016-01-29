@@ -92,12 +92,20 @@ class Controller
       .map { |p| [p, EvaluatePoker.evaluate(p.hand + @community_cards)] }
       .sort_by { |score| -score[1] }
     # winner, score = scores[scores.map { |e| e[1] }.index(scores.map { |e| e[1] }.max)]
+    bets = @players.map { |p| [p, @pot.bet_of(p)] }.to_h
     pot_amount = @pot.whole_pot
     scores.reduce(pot_amount) do |sum, score|
       winner = score[0]
       type = score[1] / 13
       card = ((score[1] + 1) % 13 + 1).to_s.gsub('11', 'Jack').gsub('12', 'Queen').gsub('13', 'King').gsub('1', 'Ace')
-      to_win = [(@pot.bet_of(winner)*@num_of_players), sum].min
+      cutoff = bets[winner]
+      to_win = @players.reduce(0) do |a, p|
+        bet = [bets[p], cutoff].min
+        bets[p] -= bet
+        p.loses(bet)
+        a + bet
+      end
+      winner.wins(to_win)
       @view.present_winner(winner.name, type, card, to_win)
       sum - to_win
     end
@@ -123,8 +131,6 @@ class Controller
         until @players[next_player_index % @num_of_players].in_game?
           next_player_index += 1
         end
-        p still_playing.map(&:name)
-        p answers
         finished = answers.join == 'k' * still_betting.length && answers.length == still_playing.length
         end_of_turn(finished, next_player_index)
       end
